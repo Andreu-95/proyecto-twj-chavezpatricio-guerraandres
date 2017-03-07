@@ -1,0 +1,482 @@
+<script type="text/ng-template">
+  alert('Die');
+</script>
+<div id="page-wrapper">
+  <div class="row">
+    <div class="col-lg-12">
+      <h1 class="page-header">Realizar Reservación</h1>
+    </div>
+    <!-- /.col-lg-12 -->
+  </div>
+  <!-- /.row -->
+  <div class="row">
+    <div class="col-lg-12">
+      <div class="panel panel-default">
+        <div class="panel-heading">
+          Reservación
+        </div>
+        <!-- /.panel-heading -->
+        <div class="panel-body">
+          <!-- Nav tabs -->
+          <ul class="nav nav-pills">
+            <li [ngClass]="{'active': !estadosTab.tab1, 'disabled': estadosTab.tab1}" id="tab_selec"><a
+              href="#seleccion" data-toggle="tab">Seleccionar Habitación</a>
+            </li>
+            <li [ngClass]="{'active': !estadosTab.tab2, 'disabled': estadosTab.tab2}" id="tab_datos"><a href="#datos"
+                                                                                                        data-toggle="tab">Ingresar
+              Datos</a>
+            </li>
+            <li [ngClass]="{'active': !estadosTab.tab3, 'disabled': estadosTab.tab3}" id="tab_registro"><a
+              href="#registrar" data-toggle="tab">Registrar Reservación</a>
+            </li>
+          </ul>
+
+          <!-- Tab panes -->
+          <div class="tab-content">
+            <div [ngClass]="{'tab-pane fade': estadoPanel.glob, 'in active': estadoPanel.tab1}" id="seleccion">
+              <br>
+              <h5>Seleccione los criterios de búsqueda para su habitación:</h5>
+              <nav class="navbar navbar-default">
+                <div class="container-fluid">
+                  <div class="collapse navbar-collapse">
+                    <form class="navbar-form navbar-left" autocomplete="off" (ngSubmit)="buscarHabitaciones(CritSearch)"
+                          #CritSearch="ngForm">
+                      <div class="container">
+                        <div class="row">
+                          <div class="col-lg-3">
+                            <div class="form-group">
+                              <label>Fecha de Ingreso</label>
+                              <input class="form-control" type="date" required name="fechaIngreso" [min]="today"
+                                     value=""
+                                     style="min-width:100%;" id="ingreso" onchange="outLimit();"
+                                     [(ngModel)]="criteriosBusqueda.fechaIngreso">
+                            </div>
+                          </div>
+                          <div class="col-lg-3">
+                            <div class="form-group">
+                              <label>Fecha de Salida</label>
+                              <input class="form-control" type="date" required name="fechaSalida" [min]="today" value=""
+                                     style="min-width:100%;" id="salida" [(ngModel)]="criteriosBusqueda.fechaSalida">
+                            </div>
+                          </div>
+                          <div class="col-lg-3">
+                            <div class="form-group">
+                              <label>Precio Máximo</label>
+                              <input class="form-control" required type="number" min="100" step="100" name="maxPrice"
+                                     style="min-width:100%;" onkeydown="return false;"
+                                     [(ngModel)]="criteriosBusqueda.maxPrice">
+                            </div>
+                          </div>
+                          <div class="col-lg-3">
+                            <div class="form-group">
+                              <label>Tipo de Habitación</label>
+                              <select class="form-control" required name="roomType" style="min-width:100%;"
+                                      [(ngModel)]="criteriosBusqueda.roomType">
+                                <option value="Cualquiera">Cualquiera</option>
+                                <option value="Simple">Simple</option>
+                                <option value="Doble">Doble</option>
+                                <option value="Triple">Triple</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="container">
+                        <button type="submit" class="btn btn-default navbar-btn" id="buscarHab">Buscar
+                          Habitaciones
+                        </button>
+                        <button type="reset" class="btn btn-default navbar-btn">Limpiar Campos</button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </nav>
+
+              <div class="panel-body">
+                <h5>Seleccione una de nuestras habitaciones disponibles:</h5>
+                <br>
+                <div class="table-responsive">
+                  <table class="table table-hover" id="conjHab">
+                    <thead>
+                    <tr>
+                      <th>Número</th>
+                      <th>Piso</th>
+                      <th>Tipo</th>
+                      <th>Desayuno</th>
+                      <th>WiFi</th>
+                      <th>Buena Vista</th>
+                      <th>Precio</th>
+                      <th>Seleccionar</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr *ngFor="let habitacion of habitaciones">
+                      <td>{{habitacion.id}}</td>
+                      <td>{{habitacion.piso}}</td>
+                      <td>{{habitacion.tipo}}</td>
+                      <td>{{habitacion.desayuno}}</td>
+                      <td>{{habitacion.wifi}}</td>
+                      <td>{{habitacion.buenaVista}}</td>
+                      <td>{{habitacion.precio}}</td>
+                      <td>
+                        <div class="checkbox">
+                          <label><input type="checkbox" (change)="obtenerID($event, habitacion.id)"></label>
+                        </div>
+                      </td>
+                    </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <button class="btn btn-info" id="nextStep" [disabled]="habitacionSelect"
+                      (click)="avanzarDatosPersonales()">
+                Ingresar
+                Datos Personales
+              </button>
+            </div>
+
+            <div [ngClass]="{'tab-pane fade': estadoPanel.glob, 'in active': estadoPanel.tab2}" id="datos">
+              <h5>Ingrese sus datos personales y de la reservación</h5>
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  Datos Clientes
+                </div>
+                <div class="panel-body">
+                  <div class="row" [hidden]="!formulario.crearCerrado">
+                    <div class="col-lg-4">
+                      <a (click)="formulario.crearCerrado = !formulario.crearCerrado" class="btn btn-block btn-success">
+                        Añadir Cliente
+                      </a>
+                    </div>
+                    <div class="col-lg-8"></div>
+                  </div>
+                  <br>
+                  <div class="row" [hidden]="formulario.crearCerrado">
+                    <div class="col-lg-12">
+                      <form autocomplete="off" (ngSubmit)="insertarCliente(nuevoCliente)" #DatPers="ngForm">
+                        <div class="row">
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Nombres</label>
+                              <input class="form-control" type="text" placeholder="Nombres"
+                                     onkeydown="return alphaOnly(event);" name="nombres" id="noms" required
+                                     [(ngModel)]="nuevoCliente.nombres">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Apellidos</label>
+                              <input class="form-control" type="text" placeholder="Apellidos"
+                                     onkeydown="return alphaOnly(event);" name="apellidos" id="apes" required
+                                     [(ngModel)]="nuevoCliente.apellidos">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Cédula</label>
+                              <input class="form-control" type="text" placeholder="Cédula" maxlength="10"
+                                     onkeydown="return numberOnly(event);" name="cedula" id="ced" required
+                                     [(ngModel)]="nuevoCliente.cedula">
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Email</label>
+                              <input class="form-control" type="email" placeholder="Email" name="emailCli" id="mail"
+                                     required [(ngModel)]="nuevoCliente.email">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Dirección</label>
+                              <input class="form-control" type="text" placeholder="Dirección" name="direccion" id="dir"
+                                     required [(ngModel)]="nuevoCliente.direccion">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Teléfono</label>
+                              <input class="form-control" type="text" placeholder="Teléfono" maxlength="10"
+                                     onkeydown="return numberOnly(event);" name="telefono" id="tel" required
+                                     [(ngModel)]="nuevoCliente.telefono">
+                            </div>
+                          </div>
+                        </div>
+                        <input type="hidden" id="id_cli" name="id_cliente">
+                        <button type="submit" class="btn btn-default" id="cargarCli">Ingresar
+                          Cliente
+                        </button>
+                        <button type="reset" class="btn btn-default" id="limpiarCli">Limpiar Campos</button>
+                      </form>
+                    </div>
+                  </div>
+                  <div class="row" [hidden]="formulario.editarCerrado">
+                    <div class="col-lg-12">
+                      <form autocomplete="off" (ngSubmit)="editCliente(editarCliente)" #DatPers="ngForm">
+                        <div class="row">
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Nombres</label>
+                              <input class="form-control" type="text" placeholder="Nombres"
+                                     onkeydown="return alphaOnly(event);" name="nombres" id="editnoms" required
+                                     [(ngModel)]="editarCliente.nombres">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Apellidos</label>
+                              <input class="form-control" type="text" placeholder="Apellidos"
+                                     onkeydown="return alphaOnly(event);" name="apellidos" id="editapes" required
+                                     [(ngModel)]="editarCliente.apellidos">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Cédula</label>
+                              <input class="form-control" type="text" placeholder="Cédula" maxlength="10"
+                                     onkeydown="return numberOnly(event);" name="cedula" id="editced" required
+                                     [(ngModel)]="editarCliente.cedula">
+                            </div>
+                          </div>
+                        </div>
+                        <div class="row">
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Email</label>
+                              <input class="form-control" type="email" placeholder="Email" name="email" id="editmail"
+                                     required [(ngModel)]="editarCliente.email">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Dirección</label>
+                              <input class="form-control" type="text" placeholder="Dirección" name="direccion" id="editdir"
+                                     required [(ngModel)]="editarCliente.direccion">
+                            </div>
+                          </div>
+                          <div class="col-lg-4">
+                            <div class="form-group">
+                              <label><i class="fa fa-asterisk fa-fw" style="color:red;"></i>Teléfono</label>
+                              <input class="form-control" type="text" placeholder="Teléfono" maxlength="10"
+                                     onkeydown="return numberOnly(event);" name="telefono" id="edittel" required
+                                     [(ngModel)]="editarCliente.telefono">
+                            </div>
+                          </div>
+                        </div>
+                        <input type="hidden" id="editid_cli" name="id_cliente">
+                        <button type="submit" class="btn btn-default" id="editCli">Editar
+                          Cliente
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                <div class="panel-footer">
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <div class="table-responsive">
+                        <table class="table table-hover" id="conjDat">
+                          <thead>
+                          <tr>
+                            <th>Nombres</th>
+                            <th>Apellidos</th>
+                            <th>Cédula</th>
+                            <th>Email</th>
+                            <th>Dirección</th>
+                            <th>Teléfono</th>
+                            <th>Editar</th>
+                            <th>Eliminar</th>
+                          </tr>
+                          </thead>
+                          <tbody>
+                          <tr *ngFor="let cliente of clientes">
+                            <td>{{cliente.nombres}}</td>
+                            <td>{{cliente.apellidos}}</td>
+                            <td>{{cliente.cedula}}</td>
+                            <td>{{cliente.email}}</td>
+                            <td>{{cliente.direccion}}</td>
+                            <td>{{cliente.telefono}}</td>
+                            <td>
+                              <a
+                                (click)="formulario.editarCerrado = !formulario.editarCerrado; editarCliente = cliente"
+                                class="btn btn-info btn-block">Editar</a>
+                            </td>
+                            <td>
+                              <a (click)="borrarCliente(cliente.id)" class="btn btn-danger btn-block">Eliminar</a>
+                            </td>
+                          </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="panel panel-default">
+                <div class="panel-heading">
+                  Método de Pago
+                </div>
+                <div class="panel-body">
+                  <div class="row">
+                    <div class="col-lg-12">
+                      <form (ngSubmit)="avanzarReservacion()" #MetPago="ngForm" autocomplete="off">
+                        <div class="form-group">
+                          <label>Tarjeta de Crédito</label>
+                          <input class="form-control" type="text" placeholder="Tarjeta" maxlength="16" required
+                                 onkeydown="return numberOnly(event);" name="num_tarjeta" [(ngModel)]="num_tarjeta">
+                        </div>
+                        <button type="submit" class="btn btn-info" id="cargarPago" [disabled]="datosIngresados">Registrar Datos</button>
+                        <button type="reset" class="btn btn-default" id="limpiarPago">Limpiar Campo</button>
+                        <button class="btn btn-danger" id="atrasPago">Regresar</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div [ngClass]="{'tab-pane fade': estadoPanel.glob, 'in active': estadoPanel.tab3}" id="registrar">
+              <h5>Verifique los datos de la reservación</h5>
+              <div class="centerTable">
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">
+                        Habitación Seleccionada
+                      </div>
+                      <!-- /.panel-heading -->
+                      <div class="panel-body">
+                        <div class="table-responsive">
+                          <table class="table table-hover" id="conjHabFinal">
+                            <thead>
+                            <tr>
+                              <th>Número</th>
+                              <th>Piso</th>
+                              <th>Tipo</th>
+                              <th>Desayuno</th>
+                              <th>WiFi</th>
+                              <th>Buena Vista</th>
+                              <th>Precio</th>
+                            </tr>
+                            </thead>
+                            <tbody *ngFor="let habitacion of habitacionesFinal">
+                              <tr>
+                                <td>{{habitacion.id}}</td>
+                                <td>{{habitacion.piso}}</td>
+                                <td>{{habitacion.tipo}}</td>
+                                <td>{{habitacion.desayuno}}</td>
+                                <td>{{habitacion.wifi}}</td>
+                                <td>{{habitacion.buenaVista}}</td>
+                                <td>{{habitacion.precio}}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                  </div>
+                  <!-- /.col-lg-6 -->
+                </div>
+                <!-- /.row -->
+
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">
+                        Datos Cliente
+                      </div>
+                      <!-- /.panel-heading -->
+                      <div class="panel-body">
+                        <div class="table-responsive">
+                          <table class="table table-hover" id="conjDatFinal">
+                            <thead>
+                            <tr>
+                              <th>Nombres</th>
+                              <th>Apellidos</th>
+                              <th>Cédula</th>
+                              <th>Email</th>
+                              <th>Dirección</th>
+                              <th>Teléfono</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let cliente of clientes">
+                                <td>{{cliente.nombres}}</td>
+                                <td>{{cliente.apellidos}}</td>
+                                <td>{{cliente.cedula}}</td>
+                                <td>{{cliente.email}}</td>
+                                <td>{{cliente.direccion}}</td>
+                                <td>{{cliente.telefono}}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                  </div>
+                  <!-- /.col-lg-6 -->
+                </div>
+                <!-- /.row -->
+
+                <div class="row">
+                  <div class="col-lg-12">
+                    <div class="panel panel-default">
+                      <div class="panel-heading">
+                        Datos Reserva
+                      </div>
+                      <!-- /.panel-heading -->
+                      <div class="panel-body">
+                        <div class="table-responsive">
+                          <table class="table table-hover" id="conjResFinal">
+                            <thead>
+                            <tr>
+                              <th>Fecha Ingreso</th>
+                              <th>Fecha Salida</th>
+                              <th>Número de Tarjeta</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td>{{criteriosBusqueda.fechaIngreso}}</td>
+                                <td>{{criteriosBusqueda.fechaSalida}}</td>
+                                <td>{{num_tarjeta}}</td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                      <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                  </div>
+                  <!-- /.col-lg-6 -->
+                </div>
+                <!-- /.row -->
+
+                <form action="" name="RegFinal">
+                  <button type="submit" (click)="guardarReservacion()" class="btn btn-success" id="regRes">Registrar Reservación</button>
+                  <button class="btn btn-danger" id="atrasRes">Regresar</button>
+                  <button class="btn btn-danger" id="cancelarRes">Cancelar</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- /.panel-body -->
+      </div>
+      <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-6 -->
+  </div>
+  <!-- /.row -->
+</div>
+<!-- /#page-wrapper -->
